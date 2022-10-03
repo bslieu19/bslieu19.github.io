@@ -1,6 +1,6 @@
 ---
-title:
-date: # e.g 2022-09-23 12:00:00 -500 (this is UTC offset)
+title: Hello World
+date: 2022-10-02 8:20 -800
 categories: [homelab]
 tags: []
 ---
