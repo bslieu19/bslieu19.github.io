@@ -5,11 +5,9 @@ categories: [homelab]
 tags: []
 ---
 
-# Hello World
-
 ## Introduction
 
-Hello World. My name is Bill.
+My name is Bill. 
 
 Welcome to my homelab documentation. The purpose of this documentation is to document homelab projects and tasks. A few technologies I use include: 
 
@@ -19,4 +17,4 @@ Welcome to my homelab documentation. The purpose of this documentation is to doc
 
 I hope you find these posts benefically in your endeavors.
 
-Thank you - Bill 
+
