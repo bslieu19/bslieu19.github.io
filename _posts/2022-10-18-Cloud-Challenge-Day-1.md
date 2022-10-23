@@ -1,5 +1,5 @@
 ---
-title: Cloud Challenge Day 1
+title: Cloud Challenge Day 1 - HTML, CSS, and AWS S3
 date: 2022-10-18 12:00 -800
 categories: [homelab]
 tags: [cloud-challenge]
@@ -67,7 +67,7 @@ After performing the steps, the website is accessible.
 
 ## Terraform 
 
-I want to minimize the amount I am spending in AWS, and set my eyes on Terraform.
+I want to minimize the amount I am spending in AWS, and decided to use Terraform to quickly provision and destroy my resources.
 
 Terraform is capable of quickly provisioning my AWS resources and destroy them when needed. This stops the need to delete each resource individually.
 
@@ -94,11 +94,71 @@ provider "aws" {
 
 Using the documentation on Hashicorp's website, I did the following:
 
-1) Create an S3 Bucket using aws_s3_bucket resource
-2) Upload html and css using aws_s3_object resource
-3) Configure static website hosting using aws_s3_bucket_website_configuration resource
-4) Set the bucket acl to public-read using aws_s3_bucket_acl resource
-5) Create ab S3 Bucket policy using aws_s3_bucket_policy resource
+* Create an S3 Bucket using aws_s3_bucket resource
+* Upload html and css using aws_s3_object resource
+* Configure static website hosting using aws_s3_bucket_website_configuration resource
+* Set the bucket acl to public-read using aws_s3_bucket_acl resource
+* Create ab S3 Bucket policy using aws_s3_bucket_policy resource
+
+```tf
+resource "aws_s3_bucket" "website" {
+  bucket = "my-bucket"
+}
+
+resource "aws_s3_object" "html" {
+    bucket = aws_s3_bucket.website.id
+    key = "index.html"
+    source = "../index.html"
+    content_type = "text/html"
+}
+
+resource "aws_s3_object" "css" {
+    bucket = aws_s3_bucket.website.id
+    key = "index.css"
+    source = "../index.css"
+    content_type = "text/css"
+}
+
+resource "aws_s3_bucket_website_configuration" "site" {
+  bucket = aws_s3_bucket.website.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "error.html"
+  }
+}
+
+resource "aws_s3_bucket_acl" "site" {
+  bucket = aws_s3_bucket.website.id
+
+  acl = "public-read"
+}
+
+resource "aws_s3_bucket_policy" "site" {
+  bucket = aws_s3_bucket.website.id
+  depends_on = [
+    aws_cloudfront_distribution.s3_website_distribution
+  ]
+
+  policy = jsonencode({
+        "Version": "2022-10-17",
+        "Id": "PolicyForCloudFrontPrivateContent",
+        "Statement": [
+            {
+                "Sid": "AllowCloudFrontServicePrincipal",
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": "s3:GetObject",
+                "Resource": "${aws_s3_bucket.website.arn}/*",
+            }
+        ]
+})
+}
+
+```
 
 After creating these resources:
 
@@ -109,6 +169,11 @@ terraform apply
 ```
 
 The website is accessible. 
+
+To destroy all resources:
+```shell
+terraform destroy 
+```
 
 ## Troubleshooting
 
