@@ -33,7 +33,7 @@ I set viewer_protocol_policy to redirect-to-https to get the https behavior I am
 
 
 ```tf
-resource "aws_cloudfront_origin_access_control" "cloudfront-s3" {
+resource "aws_cloudfront_origin_access_control" "example" {
   name                              = "cloudfront-s3-hosting-access-control"
   description                       = "Default Policy"
   origin_access_control_origin_type = "s3"
@@ -42,12 +42,12 @@ resource "aws_cloudfront_origin_access_control" "cloudfront-s3" {
 }
 
 
-resource "aws_cloudfront_distribution" "s3_website_distribution" {
-  depends_on = [aws_cloudfront_origin_access_control.cloudfront-s3, aws_s3_object.index]
+resource "aws_cloudfront_distribution" "example" {
+  depends_on = [aws_cloudfront_origin_access_control.example, aws_s3_object.example]
   origin {
-    domain_name              = aws_s3_bucket.website.bucket_regional_domain_name
-    origin_access_control_id = aws_cloudfront_origin_access_control.cloudfront-s3.id
-    origin_id                = "myS3Origin"
+    domain_name              = aws_s3_bucket.example.bucket_regional_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.example.id
+    origin_id                = "example"
 
   }
 
@@ -57,7 +57,7 @@ resource "aws_cloudfront_distribution" "s3_website_distribution" {
   default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "myS3Origin"
+    target_origin_id = "example"
 
     forwarded_values {
       query_string = false
@@ -87,10 +87,10 @@ Although this did setup my cloudfront distribution, I was still unable to access
 The last step to make it work involved setting the bucket permissions to only serve the bucket contents on the cloudfront url. I added a 'depends_on' condition so this resource only gets applied after the aws_cloudfront_distribution resource is finished. 
 
 ```tf
-resource "aws_s3_bucket_policy" "site" {
-  bucket = aws_s3_bucket.website.id
+resource "aws_s3_bucket_policy" "example" {
+  bucket = aws_s3_bucket.example.id
   depends_on = [
-    aws_cloudfront_distribution.s3_website_distribution
+    aws_cloudfront_distribution.example
   ]
 
   policy = jsonencode({
@@ -107,7 +107,7 @@ resource "aws_s3_bucket_policy" "site" {
                 "Resource": "${aws_s3_bucket.website.arn}/*",
                 "Condition": {
                     "StringEquals": {
-                      "AWS:SourceArn": "${aws_cloudfront_distribution.s3_website_distribution.arn}"
+                      "AWS:SourceArn": "${aws_cloudfront_distribution.example.arn}"
                     }
                 }
             }

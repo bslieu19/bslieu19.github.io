@@ -9,11 +9,11 @@ tags: [cloud-challenge]
 
 The cloud challenge takes inspiration from the cloud resume challenge and will closely follow the goals defined on the website. This can be found at: https://cloudresumechallenge.dev/
 
-What I would like to accomplish from this challenge is to learn a variety of technologies, and slowly learn to recreate some components of my homelab in the cloud using AWS. 
+The goal of this challenge is to learn how to better use AWS and get more comfortable with Terraform and Gitlab CI/CD.
 
 ## HTML, CSS
 
-IN HTML, I created a template for a section in the resume on the html document. The purpose is to reuse it on other sections as much as possible.  
+IN HTML, I created a template to reuse for each section on the index.html document.
 
 ```html
     <block id="class-name">
@@ -31,9 +31,9 @@ IN HTML, I created a template for a section in the resume on the html document. 
     </block>
 ```
 
-There are multiple blocks, each with a different class or id name. This was done in order to allow more freedom when apply CSS to the HTML document. 
+To create a traditional resume, I centered the index.html contents to the middle of the page and move the dates to the far right
 
-Moving into CSS, I made the decision to center the text and move all the dates to the right of the document. I prefer to keep it simple, and additional CSS can always be applied in the future. 
+![web](/assets/images/2022-10-18/website.png)
 
 ## AWS
 
@@ -41,7 +41,8 @@ I created an AWS account to use the static website hosting option on an S3 bucke
 
 Each bucket needs to have a unique name, and by default, denies all internet requests. 
 
-The bucket needs to have the option "block public access" turned off, and a bucket policy created to define what can be done with the S3 bucket in json. As a test, I used the below bucket policy.
+The bucket needs to have the option "block public access" turned off, and a bucket policy created to define what can be done with the S3 bucket in json. As a test, I used the below bucket policy. This will be changed in the future. 
+
 
 ```json
 {
@@ -101,26 +102,26 @@ Using the documentation on Hashicorp's website, I did the following:
 * Create ab S3 Bucket policy using aws_s3_bucket_policy resource
 
 ```tf
-resource "aws_s3_bucket" "website" {
+resource "aws_s3_bucket" "example" {
   bucket = "my-bucket"
 }
 
-resource "aws_s3_object" "html" {
-    bucket = aws_s3_bucket.website.id
+resource "aws_s3_object" "example" {
+    bucket = aws_s3_bucket.example.id
     key = "index.html"
-    source = "../index.html"
+    source = "index.html"
     content_type = "text/html"
 }
 
 resource "aws_s3_object" "css" {
-    bucket = aws_s3_bucket.website.id
+    bucket = aws_s3_bucket.example.id
     key = "index.css"
-    source = "../index.css"
+    source = "index.css"
     content_type = "text/css"
 }
 
-resource "aws_s3_bucket_website_configuration" "site" {
-  bucket = aws_s3_bucket.website.id
+resource "aws_s3_bucket_website_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
 
   index_document {
     suffix = "index.html"
@@ -131,16 +132,16 @@ resource "aws_s3_bucket_website_configuration" "site" {
   }
 }
 
-resource "aws_s3_bucket_acl" "site" {
-  bucket = aws_s3_bucket.website.id
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.example.id
 
   acl = "public-read"
 }
 
-resource "aws_s3_bucket_policy" "site" {
-  bucket = aws_s3_bucket.website.id
+resource "aws_s3_bucket_policy" "example" {
+  bucket = aws_s3_bucket.example.id
   depends_on = [
-    aws_cloudfront_distribution.s3_website_distribution
+    aws_cloudfront_distribution.example
   ]
 
   policy = jsonencode({
@@ -152,7 +153,7 @@ resource "aws_s3_bucket_policy" "site" {
                 "Effect": "Allow",
                 "Principal": "*",
                 "Action": "s3:GetObject",
-                "Resource": "${aws_s3_bucket.website.arn}/*",
+                "Resource": "${aws_s3_bucket.example.arn}/*",
             }
         ]
 })
@@ -181,9 +182,9 @@ After applying the terraform code, the website was not serving html, but rather 
 
 ```tf
 resource "aws_s3_object" "html" {
-    bucket = aws_s3_bucket.site.id
+    bucket = aws_s3_bucket.example.id
     key = "index.html"
-    source = "../index.html"
+    source = "index.html"
     content_type = "text/html"
 }
 ```
